@@ -4,13 +4,13 @@
 
 ![Project Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
 ![Tech Stack](https://img.shields.io/badge/Stack-MERN%20%2B%20TypeScript-blue?style=for-the-badge)
-![License](https://img.shields.io/badge/Academic-CA%20Submission-orange?style=for-the-badge)
+[![Vercel Deployment](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://25070521291-ca-03-one.vercel.app/)
 ![Excel Integration](https://img.shields.io/badge/Auto--Reporting-ExcelJS%20Sync-green?style=for-the-badge)
 
 **A high-performance, responsive Full-Stack E-Commerce platform for indoor plants.**  
 Preserves 100% of the original frontend aesthetics while adding a resilient Node.js/Express backend, MongoDB Atlas database integration, and automated Excel reporting.
 
-[🌐 Open Frontend UI (Port 5173)](http://localhost:5173) • [📡 API Documentation (Port 5000)](http://localhost:5000/api) • [📊 Download Excel Data](http://localhost:5000/api/excel/download)
+[🚀 **Open Live Web App on Vercel**](https://25070521291-ca-03-one.vercel.app/) • [🌐 Local Frontend (Port 5173)](http://localhost:5173) • [📡 API Documentation (Port 5000)](http://localhost:5000/api) • [📊 Download Excel Data](http://localhost:5000/api/excel/download)
 
 </div>
 
@@ -320,6 +320,15 @@ CLIENT_URL=http://localhost:5173
 | **Live Excel Download** | ✅ PASSED | `GET /api/excel/download` streams valid `.xlsx` file |
 | **Filtered Sheet Downloads** | ✅ PASSED | Successfully downloaded `test_orders.xlsx` and `test_customers.xlsx` |
 | **Interactive Admin Dashboard** | ✅ PASSED | Tabbed modal with status filters, date range, and download triggers |
+
+---
+
+## 🔗 Live Application Links
+
+- 🚀 **Live Production Web App (Vercel):** [https://25070521291-ca-03-one.vercel.app/](https://25070521291-ca-03-one.vercel.app/)
+- 🐙 **GitHub Repository:** [https://github.com/Sameerkaradbhajne/25070521291-CA-03](https://github.com/Sameerkaradbhajne/25070521291-CA-03)
+- 📡 **Backend REST API:** [http://localhost:5000/api](http://localhost:5000/api)
+- 📊 **Live Excel Report Download:** [http://localhost:5000/api/excel/download](http://localhost:5000/api/excel/download)
 
 ---
 
