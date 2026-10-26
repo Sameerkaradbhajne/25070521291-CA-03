@@ -1,4 +1,5 @@
 import { Order } from '../models/Order.js';
+import { Customer } from '../models/Customer.js';
 import { syncExcelWorkbook } from '../services/excelService.js';
 
 // In-memory orders cache in case MongoDB is in cold boot
@@ -72,6 +73,27 @@ export const createOrder = async (req, res) => {
 
         try {
             const savedOrder = await Order.create(orderData);
+
+            // Upsert into Customer collection
+            try {
+                await Customer.findOneAndUpdate(
+                    { email: orderData.customer.email },
+                    {
+                        $setOnInsert: {
+                            customerId: orderData.customer.customerId,
+                            name: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim(),
+                            registrationDate: new Date(),
+                            phone: orderData.customer.phone
+                        },
+                        $inc: { totalOrders: 1, totalSpent: calculatedTotal },
+                        $set: { lastOrderDate: new Date() }
+                    },
+                    { upsert: true, new: true }
+                );
+            } catch (custErr) {
+                console.error('[Customer Sync Warning]:', custErr.message);
+            }
+
             // Auto-sync Excel in background
             syncExcelWorkbook(memoryOrders).catch(err => console.error('[Excel Auto-Sync Error]:', err.message));
 

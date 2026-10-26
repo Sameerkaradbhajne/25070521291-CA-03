@@ -417,7 +417,7 @@ export const syncExcelWorkbook = async (customOrders = []) => {
         isSyncing = false;
         if (pendingSync) {
             pendingSync = false;
-            syncExcelWorkbook(memoryFallbackOrders).catch(() => {});
+            syncExcelWorkbook(memoryOrders).catch(() => {});
         }
     }
 };

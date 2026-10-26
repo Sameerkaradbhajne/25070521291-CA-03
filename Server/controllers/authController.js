@@ -2,8 +2,11 @@ import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error('[Auth] JWT_SECRET is not defined in environment variables!');
+
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET || 'urban_jungle_secret_key_2026_flexi_ca', {
+    return jwt.sign({ id }, JWT_SECRET, {
         expiresIn: '30d'
     });
 };

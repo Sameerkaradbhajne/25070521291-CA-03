@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { seedDatabase } from './seed/seedData.js';
@@ -32,9 +33,14 @@ connectDB().then((connected) => {
 
 // Middleware
 app.use(cors({
-    origin: '*',
+    origin: [
+        process.env.CLIENT_URL || 'http://localhost:5173',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173'
+    ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -86,15 +92,8 @@ app.use('/api/excel', excelRoutes);
 
 // Helper for DB status
 function mongooseStatus() {
-    try {
-        import('mongoose').then(m => {
-            const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
-            return states[m.default.connection.readyState] || 'unknown';
-        });
-        return 'configured';
-    } catch {
-        return 'unavailable';
-    }
+    const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+    return states[mongoose.connection.readyState] || 'unknown';
 }
 
 // Error Handler Middleware

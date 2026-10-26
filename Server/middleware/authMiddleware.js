@@ -12,7 +12,7 @@ export const protect = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'urban_jungle_secret_key_2026_flexi_ca');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = await User.findById(decoded.id).select('-password');
         next();
     } catch (err) {
