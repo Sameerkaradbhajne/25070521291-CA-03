@@ -10,6 +10,39 @@ const api = axios.create({
     timeout: 8000
 });
 
+// Attach JWT token if available
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('urban_token') || sessionStorage.getItem('urban_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+// Authentication
+export interface UserData {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    token?: string;
+}
+
+export const loginUserApi = async (credentials: { email: string; password: string }) => {
+    const response = await api.post('/auth/login', credentials, { timeout: 3000 });
+    return response.data;
+};
+
+export const registerUserApi = async (credentials: { name: string; email: string; password: string }) => {
+    const response = await api.post('/auth/register', credentials, { timeout: 3000 });
+    return response.data;
+};
+
+export const getCurrentUserApi = async () => {
+    const response = await api.get('/auth/me');
+    return response.data;
+};
+
 // Products
 export const getProducts = async (category?: string, search?: string) => {
     try {

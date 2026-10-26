@@ -1,21 +1,33 @@
-import { Search, ShoppingBag, Package } from 'lucide-react';
+import { Search, ShoppingBag, Package, User as UserIcon, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export const Navbar = ({
     cartCount = 0,
     onCartClick,
     onOrdersClick,
+    onLoginClick,
+    onHomeClick,
     searchQuery,
     onSearch
 }: {
     cartCount?: number;
     onCartClick: () => void;
     onOrdersClick?: () => void;
+    onLoginClick?: () => void;
+    onHomeClick?: () => void;
     searchQuery: string;
     onSearch: (query: string) => void;
 }) => {
+    const { user, isAuthenticated, logout } = useAuth();
+    const [showUserDropdown, setShowUserDropdown] = useState(false);
+
     return (
         <nav className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm py-4 px-6 md:px-12 flex items-center justify-between border-b border-gray-100 transition-all duration-300">
-            <div className="flex items-center gap-2 cursor-pointer group">
+            <div
+                onClick={onHomeClick}
+                className="flex items-center gap-2 cursor-pointer group"
+            >
                 <div className="text-jungle-green transition-transform duration-300 group-hover:rotate-12">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 22v-7l-2-2-2 2v7" />
@@ -59,6 +71,63 @@ export const Navbar = ({
                     >
                         <Package size={20} />
                         <span className="hidden sm:inline">Orders</span>
+                    </button>
+                )}
+
+                {/* User / Sign In */}
+                {isAuthenticated && user ? (
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowUserDropdown(!showUserDropdown)}
+                            title={`Account: ${user.name}`}
+                            className="flex items-center gap-2 p-1.5 pl-2.5 pr-3 rounded-full bg-emerald-50 text-jungle-green border border-emerald-200 hover:bg-emerald-100 transition-colors text-xs font-semibold"
+                        >
+                            <span className="w-6 h-6 rounded-full bg-jungle-green text-white flex items-center justify-center text-[11px] font-bold">
+                                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </span>
+                            <span className="hidden sm:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
+                        </button>
+
+                        {showUserDropdown && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-fadeIn">
+                                <div className="px-4 py-2 border-b border-gray-100">
+                                    <p className="text-xs font-semibold text-gray-800 truncate">{user.name}</p>
+                                    <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
+                                </div>
+                                {onOrdersClick && (
+                                    <button
+                                        onClick={() => {
+                                            setShowUserDropdown(false);
+                                            onOrdersClick();
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                    >
+                                        <Package size={14} />
+                                        <span>My Orders</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        setShowUserDropdown(false);
+                                        logout();
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                    <LogOut size={14} />
+                                    <span>Sign Out</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <button
+                        onClick={onLoginClick}
+                        id="nav-login-btn"
+                        title="Sign In"
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-900/5 hover:bg-emerald-900/10 text-jungle-green transition-all text-xs font-semibold border border-emerald-900/10"
+                    >
+                        <UserIcon size={16} />
+                        <span className="hidden sm:inline">Sign In</span>
                     </button>
                 )}
 

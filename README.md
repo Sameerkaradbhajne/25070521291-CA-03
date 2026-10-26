@@ -3,9 +3,14 @@
 <div align="center">
 
 ![Project Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
-![Tech Stack](https://img.shields.io/badge/Stack-MERN%20%2B%20TypeScript-blue?style=for-the-badge)
+[![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Vercel Deployment](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://25070521291-ca-03-one.vercel.app/)
-![Excel Integration](https://img.shields.io/badge/Auto--Reporting-ExcelJS%20Sync-green?style=for-the-badge)
+![Excel Integration](https://img.shields.io/badge/Auto--Reporting-ExcelJS%20Sync-green?style=for-the-badge&logo=microsoftexcel&logoColor=white)
 
 **A high-performance, responsive Full-Stack E-Commerce platform for indoor plants.**  
 Preserves 100% of the original frontend aesthetics while adding a resilient Node.js/Express backend, MongoDB Atlas database integration, and automated Excel reporting.
@@ -69,11 +74,23 @@ graph TD
 
 | Layer | Technologies & Packages Used |
 |---|---|
-| **Frontend (`Client/`)** | React 19, TypeScript, Vite 7, TailwindCSS, Framer Motion, Lucide React, Axios |
-| **Backend (`Server/`)** | Node.js (v24), Express.js 5, Mongoose 9, CORS, Dotenv, Morgan, JWT, BcryptJS |
-| **Excel Engine** | **ExcelJS** — Automated multi-sheet formatting, currency formatting, auto-filters & freeze panes |
-| **Database** | **MongoDB Atlas** (Cloud ReplicaSet) + Resilient in-memory fallback buffer |
-| **Version Control** | Git, GitHub ready with clean `.gitignore` |
+| **Frontend (`Client/`)** | ⚛️ **React 19**, 🔷 **TypeScript**, ⚡ **Vite 7**, 🎨 **TailwindCSS**, 🎬 **Framer Motion**, 🔣 **Lucide React**, 🌐 **Axios** |
+| **Backend (`Server/`)** | 🟢 **Node.js (v24)**, 🚂 **Express.js 5**, 🍃 **Mongoose 9**, 🔐 **JWT**, 🔒 **BcryptJS**, CORS, Dotenv, Morgan |
+| **Excel Engine** | 📊 **ExcelJS** — Automated multi-sheet formatting, currency formatting, auto-filters & freeze panes |
+| **Database** | 🍃 **MongoDB Atlas** (Cloud ReplicaSet) + Resilient in-memory fallback buffer |
+| **Version Control** | 🐙 **Git & GitHub** ready with clean `.gitignore` |
+
+### 🌐 Core Languages & Frameworks
+<p align="left">
+  <img src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/TailwindCSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+</p>
 
 ---
 
