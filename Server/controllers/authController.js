@@ -41,7 +41,7 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// @desc    Login user (with instant fallback for any email/password)
+// @desc    Login user with secure bcrypt and JWT verification
 // @route   POST /api/auth/login
 export const loginUser = async (req, res) => {
     try {
@@ -50,60 +50,28 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please provide email and password' });
         }
 
-        let user = null;
-        if (mongoose.connection.readyState === 1) {
-            try {
-                user = await User.findOne({ email }).maxTimeMS(1000).exec();
-            } catch (dbErr) {
-                console.warn('[Auth Warning] Database query bypassed:', dbErr.message);
-            }
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
 
-        // Derive pretty name from email (e.g. "purushottamkardabhajane" -> "Purushottam Kardabhajane")
-        const usernamePart = email.split('@')[0].replace(/[._-]/g, ' ');
-        const derivedName = usernamePart.charAt(0).toUpperCase() + usernamePart.slice(1);
-
-        if (user && user.comparePassword) {
-            const isMatch = await user.comparePassword(password);
-            if (isMatch) {
-                return res.json({
-                    success: true,
-                    data: {
-                        _id: user._id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role,
-                        token: generateToken(user._id)
-                    }
-                });
-            }
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
 
-        // Instant universal login: seamlessly authenticates any user
-        const fallbackId = (user && user._id) ? user._id : 'usr_' + Date.now();
-        res.json({
+        return res.json({
             success: true,
             data: {
-                _id: fallbackId,
-                name: (user && user.name) ? user.name : derivedName,
-                email: email,
-                role: 'customer',
-                token: generateToken(fallbackId)
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                token: generateToken(user._id)
             }
         });
     } catch (error) {
-        // Even on unexpected error, return successful session so user is never blocked
-        const fallbackName = (req.body.email || 'Botanist').split('@')[0];
-        res.json({
-            success: true,
-            data: {
-                _id: 'usr_' + Date.now(),
-                name: fallbackName.charAt(0).toUpperCase() + fallbackName.slice(1),
-                email: req.body.email || 'user@urbanjungle.com',
-                role: 'customer',
-                token: generateToken('usr_' + Date.now())
-            }
-        });
+        return res.status(500).json({ success: false, message: 'Authentication error: ' + error.message });
     }
 };
 

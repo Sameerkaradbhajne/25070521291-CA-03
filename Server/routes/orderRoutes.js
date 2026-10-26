@@ -5,17 +5,18 @@ import {
     getOrderById,
     updateOrderStatus
 } from '../controllers/orderController.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.route('/')
     .post(createOrder)
-    .get(getOrders);
+    .get(protect, admin, getOrders);
 
 router.route('/:id')
-    .get(getOrderById);
+    .get(protect, admin, getOrderById);
 
 router.route('/:id/status')
-    .patch(updateOrderStatus);
+    .patch(protect, admin, updateOrderStatus);
 
 export default router;

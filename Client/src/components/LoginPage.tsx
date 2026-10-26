@@ -78,11 +78,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateHome, onNavigate
                     onNavigateHome();
                 }, 600);
             }
-        } catch {
-            setSuccessMsg('Sanctuary pass verified. Entering...');
-            setTimeout(() => {
-                onNavigateHome();
-            }, 600);
+        } catch (err: any) {
+            const message = err.response?.data?.message || err.message || 'Authentication failed. Please check your credentials.';
+            setErrorMsg(message);
         }
     };
 
@@ -94,8 +92,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateHome, onNavigate
             setTimeout(() => {
                 onNavigateHome();
             }, 600);
-        } catch {
-            onNavigateHome();
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Google Sign-In is unavailable.');
         }
     };
 

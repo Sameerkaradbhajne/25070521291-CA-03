@@ -1,7 +1,5 @@
 import { Consultation } from '../models/Consultation.js';
 
-const memoryConsultations = [];
-
 // @desc    Book a plant service consultation
 // @route   POST /api/consultations
 export const bookConsultation = async (req, res) => {
@@ -25,38 +23,24 @@ export const bookConsultation = async (req, res) => {
             status: 'Pending'
         };
 
-        try {
-            const consultation = await Consultation.create(consultationData);
-            return res.status(201).json({
-                success: true,
-                message: `Booking received! Our ${serviceType} specialist will contact you at ${email}.`,
-                data: consultation
-            });
-        } catch (dbErr) {
-            consultationData._id = 'mem_c_' + Date.now();
-            consultationData.createdAt = new Date().toISOString();
-            memoryConsultations.unshift(consultationData);
-            return res.status(201).json({
-                success: true,
-                message: `Booking received! Our ${serviceType} specialist will contact you at ${email}.`,
-                data: consultationData
-            });
-        }
+        const consultation = await Consultation.create(consultationData);
+        return res.status(201).json({
+            success: true,
+            message: `Booking received! Our ${serviceType} specialist will contact you at ${email}.`,
+            data: consultation
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'Failed to record consultation in database: ' + error.message });
     }
 };
 
-// @desc    Get all booked consultations
+// @desc    Get all booked consultations (Admin only)
 // @route   GET /api/consultations
 export const getConsultations = async (req, res) => {
     try {
-        let list = await Consultation.find().sort({ createdAt: -1 });
-        if (list.length === 0 && memoryConsultations.length > 0) {
-            list = memoryConsultations;
-        }
+        const list = await Consultation.find().sort({ createdAt: -1 });
         res.json({ success: true, count: list.length, data: list });
     } catch (error) {
-        res.json({ success: true, count: memoryConsultations.length, data: memoryConsultations });
+        res.status(500).json({ success: false, message: 'Failed to retrieve consultations: ' + error.message });
     }
 };

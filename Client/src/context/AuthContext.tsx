@@ -41,38 +41,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [token]);
 
-    const deriveNameFromEmail = (email: string) => {
-        const raw = email.split('@')[0].replace(/[._-]/g, ' ');
-        return raw.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Plant Enthusiast';
-    };
+
 
     const login = async (credentials: { email: string; password: string }, rememberMe: boolean = true): Promise<UserData> => {
         setIsLoading(true);
         try {
-            let userData: UserData;
-            let userToken: string;
-
-            try {
-                const res = await loginUserApi(credentials);
-                if (res.success && res.data) {
-                    userData = res.data;
-                    userToken = res.data.token || ('token_' + Date.now());
-                } else {
-                    throw new Error(res.message || 'Fallback to instant login');
-                }
-            } catch (apiErr) {
-                // Universal fallback: Allow any email and password to log in instantly
-                console.info('[Auth] Instant seamless login activated for:', credentials.email);
-                const derivedName = deriveNameFromEmail(credentials.email);
-                userToken = 'urban_jwt_' + btoa(credentials.email) + '_' + Date.now();
-                userData = {
-                    _id: 'usr_' + Date.now(),
-                    name: derivedName,
-                    email: credentials.email,
-                    role: 'customer',
-                    token: userToken
-                };
+            const res = await loginUserApi(credentials);
+            if (!res.success || !res.data) {
+                throw new Error(res.message || 'Invalid credentials');
             }
+            const userData: UserData = res.data;
+            const userToken: string = res.data.token || '';
 
             setUser(userData);
             setToken(userToken);
@@ -95,50 +74,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const loginWithGoogle = async (): Promise<UserData> => {
-        setIsLoading(true);
-        try {
-            const googleUser: UserData = {
-                _id: 'usr_google_' + Date.now(),
-                name: 'Botanical Explorer',
-                email: 'nature.lover@gmail.com',
-                role: 'customer',
-                token: 'urban_google_token_' + Date.now()
-            };
-
-            setUser(googleUser);
-            setToken(googleUser.token!);
-            localStorage.setItem('urban_token', googleUser.token!);
-            localStorage.setItem('urban_user', JSON.stringify(googleUser));
-            return googleUser;
-        } finally {
-            setIsLoading(false);
-        }
+        throw new Error('Google OAuth is not configured on this deployment. Please use email and password to sign in.');
     };
 
     const register = async (data: { name: string; email: string; password: string }, rememberMe: boolean = true): Promise<UserData> => {
         setIsLoading(true);
         try {
-            let userData: UserData;
-            let userToken: string;
-
-            try {
-                const res = await registerUserApi(data);
-                if (res.success && res.data) {
-                    userData = res.data;
-                    userToken = res.data.token || ('token_' + Date.now());
-                } else {
-                    throw new Error(res.message || 'Fallback to instant registration');
-                }
-            } catch (apiErr) {
-                userToken = 'urban_jwt_' + btoa(data.email) + '_' + Date.now();
-                userData = {
-                    _id: 'usr_' + Date.now(),
-                    name: data.name.trim() || deriveNameFromEmail(data.email),
-                    email: data.email,
-                    role: 'customer',
-                    token: userToken
-                };
+            const res = await registerUserApi(data);
+            if (!res.success || !res.data) {
+                throw new Error(res.message || 'Registration failed');
             }
+            const userData: UserData = res.data;
+            const userToken: string = res.data.token || '';
 
             setUser(userData);
             setToken(userToken);

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOrders, getExcelStatus, syncExcelData, getExcelDownloadUrl } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface OrdersModalProps {
     isOpen: boolean;
@@ -22,6 +23,7 @@ interface OrdersModalProps {
 }
 
 export const OrdersModal = ({ isOpen, onClose }: OrdersModalProps) => {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<'orders' | 'excel'>('orders');
     const [orders, setOrders] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -38,11 +40,11 @@ export const OrdersModal = ({ isOpen, onClose }: OrdersModalProps) => {
     const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && user?.role === 'admin') {
             loadOrders();
             loadExcelMeta();
         }
-    }, [isOpen]);
+    }, [isOpen, user]);
 
     const loadOrders = () => {
         setIsLoading(true);
@@ -102,6 +104,35 @@ export const OrdersModal = ({ isOpen, onClose }: OrdersModalProps) => {
     };
 
     if (!isOpen) return null;
+
+    if (user?.role !== 'admin') {
+        return (
+            <AnimatePresence>
+                <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl text-center"
+                    >
+                        <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3">
+                            <AlertCircle size={28} />
+                        </div>
+                        <h3 className="font-serif text-xl font-bold text-gray-900 mb-1">Administrator Access Required</h3>
+                        <p className="text-xs text-gray-500 mb-5">
+                            Customer orders and Excel management reports are protected and require verified administrator credentials.
+                        </p>
+                        <button
+                            onClick={onClose}
+                            className="px-6 py-2 rounded-full bg-jungle-green text-white text-xs font-semibold hover:bg-opacity-90 transition-colors"
+                        >
+                            Close
+                        </button>
+                    </motion.div>
+                </div>
+            </AnimatePresence>
+        );
+    }
 
     return (
         <AnimatePresence>

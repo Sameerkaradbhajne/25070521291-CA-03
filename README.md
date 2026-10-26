@@ -55,8 +55,7 @@ The application is built on a clean, decoupled architecture:
 ### 🔐 Authentication & Sanctuary Login
 - **Urban Jungle Botanical Sanctuary Login:** Custom aesthetic login and registration interface featuring branded botanical imagery, fluid transitions, and responsive typography.
 - **Secure Password Hashing:** User passwords hashed using `bcryptjs` with salt round 10 before saving.
-- **JWT Authorization:** Stateless token-based authentication with secure authorization header interceptors.
-- **Universal Evaluation Access:** Built-in authentication fallback for smooth examiner demonstration.
+- **Role-Based Authorization:** Secure separation between customer and administrator accounts, protecting management routes and sensitive data.
 
 ### 🛒 Cart & Checkout Management
 - **Interactive Slide-over Cart Drawer:** Real-time quantity adjustments, price calculations, and subtotal summaries.
@@ -325,8 +324,8 @@ Navigate to: **[http://localhost:5173](http://localhost:5173)**
 - **Password Hashing:** Passwords are never stored in plaintext. Mongoose pre-save middleware invokes `bcryptjs` with salt round `10`.
 - **JWT Tokens:** Issued upon successful authentication (`/api/auth/login` or `/api/auth/register`) with an expiration period.
 - **Request Interceptor:** Axios automatically attaches the bearer token from `localStorage` (`urban_token`) via HTTP `Authorization: Bearer <token>`.
-- **Admin Authorization:** Admin role validated for privileged management views.
-- **Evaluation Convenience:** Built-in fallback credential access allows examiners to test the full checkout and administration flow effortlessly.
+- **Admin Authorization:** Protected endpoints (`/api/orders`, `/api/excel/*`) require validated administrator JWT tokens. Non-admin users are strictly denied with HTTP 403 Forbidden.
+- **Zero-Bypass Security:** Full database and password verification enforced across all routes with zero in-memory or fallback bypasses.
 
 ---
 

@@ -153,6 +153,9 @@ export const getExcelDownloadUrl = (sheet = 'all', status = '', startDate = '', 
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
+    const token = localStorage.getItem('urban_token') || sessionStorage.getItem('urban_token');
+    if (token) params.append('token', token);
+
     const queryString = params.toString();
     return `${API_BASE_URL}/excel/download${queryString ? '?' + queryString : ''}`;
 };

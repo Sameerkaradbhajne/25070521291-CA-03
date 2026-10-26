@@ -63,14 +63,14 @@ export const Navbar = ({
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-jungle-green transition-colors" />
                 </div>
 
-                {onOrdersClick && (
+                {onOrdersClick && user?.role === 'admin' && (
                     <button
                         onClick={onOrdersClick}
-                        title="View Database Orders"
-                        className="p-2 text-gray-600 hover:text-jungle-green hover:bg-gray-100 rounded-full transition-colors flex items-center gap-1 text-xs font-semibold"
+                        title="Admin Orders & Excel Reports"
+                        className="p-2 text-jungle-green bg-emerald-50 hover:bg-emerald-100 rounded-full transition-colors flex items-center gap-1.5 text-xs font-semibold border border-emerald-200"
                     >
-                        <Package size={20} />
-                        <span className="hidden sm:inline">Orders</span>
+                        <Package size={18} />
+                        <span className="hidden sm:inline">Admin Orders</span>
                     </button>
                 )}
 

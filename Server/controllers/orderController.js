@@ -95,7 +95,7 @@ export const createOrder = async (req, res) => {
             }
 
             // Auto-sync Excel in background
-            syncExcelWorkbook(memoryOrders).catch(err => console.error('[Excel Auto-Sync Error]:', err.message));
+            syncExcelWorkbook().catch(err => console.error('[Excel Auto-Sync Error]:', err.message));
 
             return res.status(201).json({
                 success: true,
@@ -103,18 +103,10 @@ export const createOrder = async (req, res) => {
                 data: savedOrder
             });
         } catch (dbErr) {
-            // DB fallback
-            orderData._id = 'mem_' + Date.now();
-            orderData.createdAt = new Date().toISOString();
-            memoryOrders.unshift(orderData);
-
-            // Auto-sync Excel in background
-            syncExcelWorkbook(memoryOrders).catch(err => console.error('[Excel Auto-Sync Error]:', err.message));
-
-            return res.status(201).json({
-                success: true,
-                message: 'Order placed successfully! (Buffered to database cache & Excel)',
-                data: orderData
+            console.error('[Order DB Error]:', dbErr.message);
+            return res.status(503).json({
+                success: false,
+                message: 'Database unavailable: Could not save order to MongoDB. Order was not placed.'
             });
         }
     } catch (error) {
@@ -125,24 +117,20 @@ export const createOrder = async (req, res) => {
     }
 };
 
-// @desc    Get all orders
+// @desc    Get all orders (Admin only)
 // @route   GET /api/orders
 export const getOrders = async (req, res) => {
     try {
-        let orders = await Order.find().sort({ createdAt: -1 });
-        if (orders.length === 0 && memoryOrders.length > 0) {
-            orders = memoryOrders;
-        }
+        const orders = await Order.find().sort({ createdAt: -1 });
         res.json({
             success: true,
             count: orders.length,
             data: orders
         });
     } catch (error) {
-        res.json({
-            success: true,
-            count: memoryOrders.length,
-            data: memoryOrders
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve orders from database: ' + error.message
         });
     }
 };
@@ -152,7 +140,7 @@ export const getOrders = async (req, res) => {
 export const getOrderById = async (req, res) => {
     try {
         const id = req.params.id;
-        let order = await Order.findOne({
+        const order = await Order.findOne({
             $or: [
                 { orderNumber: id },
                 ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])
@@ -160,11 +148,7 @@ export const getOrderById = async (req, res) => {
         });
 
         if (!order) {
-            order = memoryOrders.find(o => o.orderNumber === id || o._id === id);
-        }
-
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found in database' });
         }
 
         res.json({ success: true, data: order });
@@ -200,27 +184,17 @@ export const updateOrderStatus = async (req, res) => {
         );
 
         if (!order) {
-            const mem = memoryOrders.find(o => o.orderNumber === id);
-            if (mem) {
-                const prev = mem.status;
-                mem.status = status;
-                if (!mem.statusHistory) mem.statusHistory = [];
-                mem.statusHistory.push({
-                    previousStatus: prev,
-                    newStatus: status,
-                    changedAt: new Date(),
-                    updatedBy
-                });
-                syncExcelWorkbook(memoryOrders).catch(() => {});
-                return res.json({ success: true, data: mem });
-            }
-            return res.status(404).json({ success: false, message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found in database' });
         }
 
         // Auto-sync Excel with status update
-        syncExcelWorkbook(memoryOrders).catch(err => console.error('[Excel Sync Error]:', err.message));
+        syncExcelWorkbook().catch(err => console.error('[Excel Sync Error]:', err.message));
 
-        res.json({ success: true, data: order });
+        return res.json({
+            success: true,
+            message: `Order status updated to "${status}" and recorded in audit log.`,
+            data: order
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
