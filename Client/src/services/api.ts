@@ -29,12 +29,12 @@ export interface UserData {
 }
 
 export const loginUserApi = async (credentials: { email: string; password: string }) => {
-    const response = await api.post('/auth/login', credentials, { timeout: 8000 });
+    const response = await api.post('/auth/login', credentials, { timeout: 3000 });
     return response.data;
 };
 
 export const registerUserApi = async (credentials: { name: string; email: string; password: string }) => {
-    const response = await api.post('/auth/register', credentials, { timeout: 8000 });
+    const response = await api.post('/auth/register', credentials, { timeout: 3000 });
     return response.data;
 };
 
