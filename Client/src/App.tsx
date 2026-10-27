@@ -129,6 +129,19 @@ function AppContent() {
     setCartItems(prev => prev.filter(item => item.id !== id));
   };
 
+  const navigateToSection = (sectionId: string) => {
+    setCurrentRoute('home');
+    window.history.pushState({}, '', `/#${sectionId}`);
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   // =========================================================================
   // RULE 1: Unauthenticated visitors opening the site ALWAYS see the Login Page.
   // The homepage NEVER appears before login.
@@ -136,7 +149,8 @@ function AppContent() {
   if (!isAuthenticated || currentRoute === 'login') {
     return (
       <LoginPage
-        onLoginSuccess={handleLoginSuccess}
+        onNavigateHome={handleLoginSuccess}
+        onNavigateSection={navigateToSection}
       />
     );
   }
