@@ -54,7 +54,10 @@ The application is built on a clean, decoupled architecture:
 
 ### 🔐 Authentication & Sanctuary Login
 - **Urban Jungle Botanical Sanctuary Login:** Custom aesthetic login and registration interface featuring branded botanical imagery, fluid transitions, and responsive typography.
-- **Secure Password Hashing:** User passwords hashed using `bcryptjs` with salt round 10 before saving.
+- **Real Database-Backed Accounts:** Users create an account first; credentials are saved directly to MongoDB (`urban_jungle.users` collection) with unique normalized email index.
+- **Secure Password Hashing:** User passwords hashed using `bcrypt` with cost factor 12 before saving. Passwords are never stored or transmitted in plaintext.
+- **Rate-Limited Authentication:** Protection against brute-force login attacks using `express-rate-limit` (15 attempts per 15 minutes).
+- **JWT Session Management:** Authenticated users receive a secure JSON Web Token (HS256) with automatic expiration and authorization header injection.
 - **Role-Based Authorization:** Secure separation between customer and administrator accounts, protecting management routes and sensitive data.
 
 ### 🛒 Cart & Checkout Management
