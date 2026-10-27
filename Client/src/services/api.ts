@@ -29,7 +29,7 @@ export interface UserData {
 }
 
 export const loginUserApi = async (credentials: { email: string; password: string }) => {
-    const response = await api.post('/auth/login', credentials, { timeout: 3000 });
+    const response = await api.post('/auth/login', credentials, { timeout: 1500 });
     return response.data;
 };
 

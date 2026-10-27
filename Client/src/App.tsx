@@ -15,81 +15,76 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import type { CartItem } from './components/CartDrawer';
 
 function AppContent() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Guest override state (in case user clicks "Explore as Guest" before signing in)
-  const [guestMode, setGuestMode] = useState<boolean>(false);
-
-  // Route state: default to 'login' as the first page unless user is already authenticated or in guest mode
+  // Route state: default strictly to 'login' unless already authenticated
   const [currentRoute, setCurrentRoute] = useState<'home' | 'login'>(() => {
-    const path = window.location.pathname.toLowerCase();
-    const hash = window.location.hash.toLowerCase();
-    if (path === '/shop' || hash === '#shop') return 'home';
-    // Default the first page to login
-    return 'login';
+    try {
+      const saved = localStorage.getItem('urban_user') || sessionStorage.getItem('urban_user');
+      return saved ? 'home' : 'login';
+    } catch {
+      return 'login';
+    }
   });
 
-  // Sync route when authentication changes
+  // Keep route strictly synchronized with authentication state
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isAuthenticated) {
+      setCurrentRoute('login');
+      if (window.location.pathname !== '/login') {
+        window.history.replaceState({}, '', '/login');
+      }
+    } else {
       setCurrentRoute('home');
+      if (window.location.pathname === '/login') {
+        window.history.replaceState({}, '', '/');
+      }
     }
   }, [isAuthenticated]);
 
-  // Listen to browser navigation (back/forward & hash changes)
+  // Handle browser back/forward buttons
   useEffect(() => {
-    const handleLocationChange = () => {
-      const path = window.location.pathname.toLowerCase();
-      const hash = window.location.hash.toLowerCase();
-      if (path === '/login' || hash === '#login') {
-        setCurrentRoute('login');
-      } else if (path === '/' && !isAuthenticated && !guestMode) {
-        // If not logged in and not guest, root is login
+    const handlePopState = () => {
+      if (!isAuthenticated) {
         setCurrentRoute('login');
       } else {
-        setCurrentRoute('home');
+        const path = window.location.pathname.toLowerCase();
+        if (path === '/login') {
+          setCurrentRoute('login');
+        } else {
+          setCurrentRoute('home');
+        }
       }
     };
 
-    window.addEventListener('popstate', handleLocationChange);
-    window.addEventListener('hashchange', handleLocationChange);
-    return () => {
-      window.removeEventListener('popstate', handleLocationChange);
-      window.removeEventListener('hashchange', handleLocationChange);
-    };
-  }, [isAuthenticated, guestMode]);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isAuthenticated]);
 
-  const navigateToLogin = () => {
-    setGuestMode(false);
-    setCurrentRoute('login');
-    window.history.pushState({}, '', '/login');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const navigateToHome = () => {
-    setGuestMode(true);
+  const handleLoginSuccess = () => {
     setCurrentRoute('home');
     window.history.pushState({}, '', '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const navigateToSection = (sectionId: string) => {
-    setGuestMode(true);
-    setCurrentRoute('home');
-    window.history.pushState({}, '', `/#${sectionId}`);
-    setTimeout(() => {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }, 100);
+  const handleNavigateToLogin = () => {
+    logout();
+    setCurrentRoute('login');
+    window.history.pushState({}, '', '/login');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNavigateToHome = () => {
+    if (isAuthenticated) {
+      setCurrentRoute('home');
+      window.history.pushState({}, '', '/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleCheckout = () => {
@@ -134,25 +129,29 @@ function AppContent() {
     setCartItems(prev => prev.filter(item => item.id !== id));
   };
 
-  // If on login route (or first page before logging in/guest mode), show LoginPage
-  if (currentRoute === 'login' && (!isAuthenticated || window.location.pathname === '/login')) {
+  // =========================================================================
+  // RULE 1: Unauthenticated visitors opening the site ALWAYS see the Login Page.
+  // The homepage NEVER appears before login.
+  // =========================================================================
+  if (!isAuthenticated || currentRoute === 'login') {
     return (
       <LoginPage
-        onNavigateHome={navigateToHome}
-        onNavigateSection={navigateToSection}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   }
 
-  // Home Store Route
+  // =========================================================================
+  // RULE 2: Urban Jungle Home Store (Only displayed once authenticated)
+  // =========================================================================
   return (
     <div className="min-h-screen bg-cream font-sans text-gray-800">
       <Navbar
         cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
         onCartClick={() => setIsCartOpen(true)}
         onOrdersClick={() => setIsOrdersOpen(true)}
-        onLoginClick={navigateToLogin}
-        onHomeClick={navigateToHome}
+        onLoginClick={handleNavigateToLogin}
+        onHomeClick={handleNavigateToHome}
         searchQuery={searchQuery}
         onSearch={setSearchQuery}
       />

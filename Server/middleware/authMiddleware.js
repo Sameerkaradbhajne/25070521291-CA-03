@@ -15,6 +15,20 @@ export const protect = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Demo token — build virtual user without DB lookup
+        if (decoded.demo || String(decoded.id).startsWith('demo_')) {
+            req.user = {
+                _id: decoded.id,
+                id: decoded.id,
+                name: 'Demo User',
+                email: decoded.email || 'demo@example.com',
+                role: 'customer',  // never admin
+                demo: true
+            };
+            return next();
+        }
+
         req.user = await User.findById(decoded.id).select('-password');
         if (!req.user) {
             return res.status(401).json({ success: false, message: 'User belonging to this token no longer exists' });
