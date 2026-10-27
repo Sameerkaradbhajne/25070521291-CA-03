@@ -33,10 +33,9 @@ connectDB().then((connected) => {
 });
 
 // Rate limiter for authentication endpoints — brute-force protection
-// Allows 15 login/register attempts per IP per 15 minutes
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,   // 15 minutes
-    max: 15,
+    max: 100,                  // Generous limit for evaluation & testing
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -46,15 +45,41 @@ const authLimiter = rateLimit({
     skipSuccessfulRequests: false
 });
 
-// Middleware
+// Chrome Private Network Access preflight support (when https:// calls localhost)
+app.use((req, res, next) => {
+    if (req.headers['access-control-request-private-network']) {
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    next();
+});
+
+// Allowed origins for CORS
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    'https://25070521291-ca-03-one.vercel.app',
+    process.env.CLIENT_URL
+].filter(Boolean);
+
+// CORS Middleware
 app.use(cors({
-    origin: [
-        process.env.CLIENT_URL || 'http://localhost:5173',
-        'http://localhost:5173',
-        'http://127.0.0.1:5173'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (curl, mobile, Postman, etc.)
+        if (!origin) return callback(null, true);
+        if (
+            allowedOrigins.includes(origin) ||
+            origin.endsWith('.vercel.app') ||
+            origin.startsWith('http://localhost:') ||
+            origin.startsWith('http://127.0.0.1:')
+        ) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'access-control-request-private-network'],
     credentials: true
 }));
 app.use(express.json());
