@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
@@ -16,17 +15,98 @@ const generateToken = (id) => {
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
+
+        // --- Server-side validation ---
         if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: 'Please provide all fields' });
+            return res.status(400).json({ success: false, message: 'Please provide name, email, and password.' });
         }
 
-        const userExists = await User.findOne({ email });
+        const trimmedName = name.trim();
+        const normalizedEmail = email.trim().toLowerCase();
+        const rawPassword = password;
+
+        if (!trimmedName) {
+            return res.status(400).json({ success: false, message: 'Full name is required.' });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(normalizedEmail)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+        }
+
+        if (rawPassword.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
+        }
+
+        // --- Duplicate email check (server-side before DB to give a friendly message) ---
+        const userExists = await User.findOne({ email: normalizedEmail });
         if (userExists) {
-            return res.status(400).json({ success: false, message: 'Email already registered' });
+            return res.status(409).json({ success: false, message: 'An account with this email address already exists. Please sign in instead.' });
         }
 
-        const user = await User.create({ name, email, password });
-        res.status(201).json({
+        // --- Create user (password is hashed by pre-save hook in User model) ---
+        const user = await User.create({
+            name: trimmedName,
+            email: normalizedEmail,
+            password: rawPassword,
+            role: 'customer'   // always default; never allow client to set role
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Account created successfully. Please sign in.',
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+                // NOTE: No token returned on register — client redirects to login
+            }
+        });
+    } catch (error) {
+        // MongoDB duplicate key error (handles concurrent registration race conditions)
+        if (error.code === 11000) {
+            return res.status(409).json({ success: false, message: 'An account with this email address already exists.' });
+        }
+        console.error('[Auth] Register error:', error.message);
+        return res.status(500).json({ success: false, message: 'Registration failed due to a server error. Please try again.' });
+    }
+};
+
+// @desc    Authenticate a registered user with correct password
+// @route   POST /api/auth/login
+export const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // --- Server-side validation ---
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: 'Please provide an email address and password.' });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(normalizedEmail)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+        }
+
+        // --- Look up registered user ---
+        const user = await User.findOne({ email: normalizedEmail }).select('+password');
+
+        if (!user) {
+            // Generic message — don't reveal whether the email is registered
+            return res.status(401).json({ success: false, message: 'Incorrect email or password. Please try again.' });
+        }
+
+        // --- Verify password against stored hash ---
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            // Generic message — don't reveal whether the password or email was wrong
+            return res.status(401).json({ success: false, message: 'Incorrect email or password. Please try again.' });
+        }
+
+        // --- Authentication successful ---
+        return res.status(200).json({
             success: true,
             data: {
                 _id: user._id,
@@ -37,82 +117,31 @@ export const registerUser = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('[Auth] Login error:', error.message);
+        return res.status(500).json({ success: false, message: 'Authentication failed due to a server error. Please try again.' });
     }
 };
 
-// @desc    Login user — supports both registered users (strict bcrypt) and
-//          demo/evaluator access (any-email / any-password → customer role only).
-//          Demo tokens are scoped to 'customer' and cannot access admin routes.
-// @route   POST /api/auth/login
-export const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'Please provide email and password' });
-        }
-
-        // Path 1: Registered user
-        const user = await User.findOne({ email });
-        if (user) {
-            const isMatch = await user.comparePassword(password);
-            if (isMatch) {
-                return res.json({
-                    success: true,
-                    data: {
-                        _id: user._id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role,
-                        token: generateToken(user._id)
-                    }
-                });
-            }
-            // If registered user password doesn't match:
-            // Allow customer-scoped session so evaluation never fails
-            const demoPayload = { id: `demo_${Buffer.from(email).toString('base64').substring(0, 12)}`, role: 'customer', demo: true };
-            const demoToken = jwt.sign(demoPayload, JWT_SECRET, { expiresIn: '1d' });
-            return res.json({
-                success: true,
-                data: {
-                    _id: demoPayload.id,
-                    name: user.name,
-                    email: user.email,
-                    role: 'customer',
-                    token: demoToken
-                }
-            });
-        }
-
-        // Path 2: Demo / Evaluator access — any unregistered email + any non-empty password
-        // Grants a scoped customer-only token. No DB record is created.
-        // Admin routes remain protected — this token will be rejected by the admin middleware.
-        const demoName = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Guest';
-        const demoPayload = { id: `demo_${Buffer.from(email).toString('base64').substring(0, 12)}`, role: 'customer', demo: true };
-        const demoToken = jwt.sign(demoPayload, JWT_SECRET, { expiresIn: '1d' });
-
-        return res.json({
-            success: true,
-            data: {
-                _id: demoPayload.id,
-                name: demoName,
-                email: email,
-                role: 'customer',
-                token: demoToken
-            }
-        });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: 'Authentication error: ' + error.message });
-    }
-};
-
-// @desc    Get user profile
-// @route   GET /api/auth/me
+// @desc    Get currently authenticated user's safe profile
+// @route   GET /api/auth/me  (protected)
 export const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
-        res.json({ success: true, data: user });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+        return res.status(200).json({ success: true, data: user });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('[Auth] GetMe error:', error.message);
+        return res.status(500).json({ success: false, message: 'Failed to retrieve user profile.' });
     }
+};
+
+// @desc    Logout — client should discard its token; server-side is stateless JWT
+// @route   POST /api/auth/logout  (protected)
+export const logoutUser = async (req, res) => {
+    // With stateless JWTs there is no server-side session to destroy.
+    // The client must delete its stored token on receipt of this response.
+    // For a production system, consider a token revocation blocklist.
+    return res.status(200).json({ success: true, message: 'Logged out successfully.' });
 };

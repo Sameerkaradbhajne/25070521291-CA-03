@@ -42,6 +42,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateHome, onNavigate
 
         if (!password) {
             errors.password = 'Password is required';
+        } else if (isRegisterMode && password.length < 8) {
+            errors.password = 'Password must be at least 8 characters';
         }
 
         if (isRegisterMode) {
@@ -66,11 +68,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateHome, onNavigate
 
         try {
             if (isRegisterMode) {
-                const userData = await register({ name: name.trim(), email: email.trim(), password }, rememberMe);
-                setSuccessMsg(`Welcome to Urban Jungle, ${userData.name}! Entering sanctuary...`);
+                // register() now returns { message } and does NOT create a session.
+                // On success, switch to login mode so the user can sign in with their new credentials.
+                const result = await register({ name: name.trim(), email: email.trim(), password });
+                setSuccessMsg(result.message || 'Account created! Please sign in with your new credentials.');
+                // Clear password fields and switch to login mode after a short delay
                 setTimeout(() => {
-                    onNavigateHome();
-                }, 600);
+                    setPassword('');
+                    setConfirmPassword('');
+                    setIsRegisterMode(false);
+                    setSuccessMsg(null);
+                }, 2500);
             } else {
                 const userData = await login({ email: email.trim(), password }, rememberMe);
                 setSuccessMsg(`Welcome, ${userData.name || 'Botanist'}! Entering your sanctuary...`);

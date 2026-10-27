@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
 import { connectDB } from './config/db.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { seedDatabase } from './seed/seedData.js';
@@ -29,6 +30,20 @@ connectDB().then((connected) => {
     } else {
         syncExcelWorkbook().catch(() => {});
     }
+});
+
+// Rate limiter for authentication endpoints — brute-force protection
+// Allows 15 login/register attempts per IP per 15 minutes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,   // 15 minutes
+    max: 15,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: 'Too many authentication attempts from this IP. Please try again in 15 minutes.'
+    },
+    skipSuccessfulRequests: false
 });
 
 // Middleware
@@ -87,7 +102,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/consultations', consultationRoutes);
 app.use('/api/workshops', workshopRoutes);
 app.use('/api/newsletter', newsletterRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);  // Rate-limited auth routes
 app.use('/api/excel', excelRoutes);
 
 // Helper for DB status
