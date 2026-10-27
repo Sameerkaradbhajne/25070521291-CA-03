@@ -441,7 +441,8 @@ The backend contains an automated Excel engine powered by **ExcelJS** that gener
 
 | Verification Category | Status | Details |
 | :--- | :---: | :--- |
-| **Frontend Production Build** |  **PASS** | `tsc -b && vite build` built with 0 errors (`index-BVg2SwXf.js`, `index-lTRJmkcY.css`) |
+| **Frontend Production Build** |  **PASS** | `tsc -b && vite build` — 2172 modules, 0 errors (`index-ChHyq6w-.js`, `index-ZlX2Q8wS.css`) |
+| **Demo Login (Any Email/Password)** |  **PASS** | Login page shown first; any valid email + non-empty password logs in; session persists on refresh |
 | **Backend Startup & Health** |  **PASS** | `GET /api/health` returns `status: "UP"`, `database: "connected"` |
 | **MongoDB Connectivity** |  **PASS** | Connected to `mongodb://127.0.0.1:27017/urban_jungle` |
 | **Catalog API & Filtering** |  **PASS** | Verified search (`snake`), category filters (`Low Light`), and full list |
