@@ -231,8 +231,49 @@ graph TD
 
 ---
 
-### Step 1: Start MongoDB Community Server
-Ensure MongoDB Community Server is running as a local service on port `27017`:
+### Step 1: Clone the Repository
+Clone the project repository to your local environment:
+```bash
+git clone https://github.com/Sameerkaradbhajne/25070521291-CA-03.git
+cd 25070521291
+```
+
+---
+
+### Step 2: Install Dependencies
+Install dependencies for both the decoupled frontend client and backend server:
+
+#### 1. Frontend Client Dependencies (`Client/`):
+```bash
+cd Client
+npm install
+```
+
+#### 2. Backend Server Dependencies (`Server/`):
+```bash
+cd Server
+npm install
+```
+
+---
+
+### Step 3: Configure Environment Variables (`Server/.env`)
+Create a `.env` file in the backend `Server/` directory (`Server/.env`):
+
+```env
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/urban_jungle
+NODE_ENV=development
+JWT_SECRET=replace_with_your_own_secure_secret
+CLIENT_URL=http://localhost:5173
+```
+
+> **Security Note:** The MongoDB database name is `urban_jungle`. The actual `Server/.env` file is excluded from Git tracking via `.gitignore` to protect all local secrets and environment keys. Never commit real credentials or production secrets.
+
+---
+
+### Step 4: Start MongoDB Community Server
+Ensure MongoDB Community Server is installed and actively running on port `27017`:
 ```powershell
 # Verify MongoDB service status on Windows:
 Get-Service MongoDB
@@ -240,52 +281,39 @@ Get-Service MongoDB
 
 ---
 
-### Step 2: Configure & Start Backend Server (`Server/`)
+### Step 5: Start Backend Server (`Server/`)
+In your first terminal, start the Express backend API server:
 
 ```bash
-# 1. Navigate to the Server directory
 cd Server
-
-# 2. Install backend dependencies
-npm install
-
-# 3. Configure environment file (copy example if not present)
-# Ensure Server/.env contains:
-# PORT=5000
-# MONGODB_URI=mongodb://127.0.0.1:27017/urban_jungle
-# NODE_ENV=development
-# JWT_SECRET=your_secure_jwt_secret_key
-# CLIENT_URL=http://localhost:5173
-
-# 4. (Optional) Seed initial plant products and workshops
-npm run seed
-
-# 5. Start the backend server
-npm start
-# Server runs on: http://localhost:5000
-# Health check: http://localhost:5000/api/health
+npm run dev
 ```
+*(Alternatively, use `npm start` for standard node execution, or `npm run seed` to populate initial catalog data)*
+
+- **Backend API Base URL:** `http://localhost:5000`
+- **Health Check Endpoint:** `http://localhost:5000/api/health`
+- **Excel Report Download:** `http://localhost:5000/api/excel/download`
+
+![Express Backend Server running with nodemon on port 5000 with MongoDB connected](screenshots/backend-terminal.png)
 
 ---
 
-### Step 3: Configure & Start Frontend Client (`Client/`)
+### Step 6: Start Frontend Client (`Client/`)
+In a second terminal, start the Vite development server:
 
 ```bash
-# 1. Open a new terminal and navigate to Client directory
 cd Client
-
-# 2. Install frontend dependencies
-npm install
-
-# 3. Start the Vite development server
 npm run dev
-# Frontend runs on: http://localhost:5173
 ```
+
+- **Frontend Application URL:** `http://localhost:5173`
+
+![Vite Frontend Development Server running on port 5173](screenshots/frontend-terminal.png)
 
 ---
 
-### Step 4: Open Application in Browser
-Navigate to: **[http://localhost:5173](http://localhost:5173)**
+### Step 7: Open Application in Browser
+Navigate to **[http://localhost:5173](http://localhost:5173)** to access the Urban Jungle store.
 
 ---
 
@@ -301,10 +329,12 @@ Navigate to: **[http://localhost:5173](http://localhost:5173)**
 1. Open **MongoDB Compass**.
 2. In the **New Connection** field, enter:
    ```
-   mongodb://127.0.0.1:27017
+   mongodb://127.0.0.1:27017/
    ```
 3. Click **Connect**.
 4. Select the **`urban_jungle`** database from the list to view all collections.
+
+![MongoDB Compass GUI connected to urban_jungle database showing all collections](screenshots/mongodb-compass.png)
 
 ### Database Collections in `urban_jungle`:
 | Collection | Description | Primary Fields |
