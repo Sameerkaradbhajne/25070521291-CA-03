@@ -151,6 +151,8 @@ graph TD
 
 ```
 25070521291/
+├── api/
+│   └── index.js                        # Vercel Serverless Function entry point (/api/*)
 ├── Client/                             # React + TypeScript Frontend
 │   ├── public/
 │   │   ├── images/                     # Botanical photography & screenshots
@@ -179,10 +181,11 @@ graph TD
 │   │   └── main.tsx                    # React DOM entry point
 │   ├── package.json                    # Frontend dependencies & scripts
 │   ├── tsconfig.json                   # TypeScript configuration
-│   └── vite.config.ts                  # Vite build configuration
+│   ├── vercel.json                     # SPA client-side routing fallback configuration
+│   └── vite.config.ts                  # Vite build configuration with /api local proxy
 ├── Server/                             # Node.js + Express Backend
 │   ├── config/
-│   │   └── db.js                       # Mongoose database connection configuration
+│   │   └── db.js                       # Mongoose connection with caching & Atlas fallback
 │   ├── controllers/
 │   │   ├── authController.js           # Login, registration & JWT issuance
 │   │   ├── productController.js        # Product queries, search & category filtering
@@ -217,8 +220,10 @@ graph TD
 │   ├── Flexi_Credit_Data.xlsx          # Live synchronized Excel workbook
 │   ├── .env.example                    # Template environment variables
 │   ├── package.json                    # Server dependencies & scripts
-│   └── server.js                       # Express application entry point
+│   └── server.js                       # Express application & serverless export
 ├── Flexi_Credit_Data.xlsx              # Root synchronized Excel workbook copy
+├── package.json                        # Monorepo build and serverless dependency manifest
+├── vercel.json                         # Vercel deployment & serverless rewrite configuration
 ├── .gitignore                          # Excludes node_modules, credentials & caches
 └── README.md                           # Project documentation & evaluation guide
 ```
@@ -444,18 +449,24 @@ The backend contains an automated Excel engine powered by **ExcelJS** that gener
 
 | Verification Category | Status | Details |
 | :--- | :---: | :--- |
-| **Frontend Production Build** |  **PASS** | `tsc -b && vite build` — 2172 modules, 0 errors (`index-ChHyq6w-.js`, `index-ZlX2Q8wS.css`) |
-| **Demo Login (Any Email/Password)** |  **PASS** | Login page shown first; any valid email + non-empty password logs in; session persists on refresh |
-| **Backend Startup & Health** |  **PASS** | `GET /api/health` returns `status: "UP"`, `database: "connected"` |
-| **MongoDB Connectivity** |  **PASS** | Connected to `mongodb://127.0.0.1:27017/urban_jungle` |
-| **Catalog API & Filtering** |  **PASS** | Verified search (`snake`), category filters (`Low Light`), and full list |
-| **User Authentication** |  **PASS** | Verified register, login, bcrypt verification, and JWT generation |
-| **Order Placement Flow** |  **PASS** | Verified `POST /api/orders` persists order and auto-upserts customer |
-| **Excel Workbook Generation** |  **PASS** | Verified 5 sheets generated with auto-filters and formatting (`Flexi_Credit_Data.xlsx`) |
-| **Excel Binary Download** |  **PASS** | Verified `GET /api/excel/download` returns valid XLSX stream (12,154 bytes) |
-| **Consultation Bookings** |  **PASS** | Verified `POST /api/consultations` with validated service types |
-| **Workshop Registrations** |  **PASS** | Verified `POST /api/workshops/register` attendee registration |
-| **Newsletter Subscription** |  **PASS** | Verified `POST /api/newsletter/subscribe` email recording |
+| **Frontend Production Build** | **PASS** | `tsc -b && vite build` — 2,172 modules compiled, 0 errors |
+| **User Registration** | **PASS** | Verified `POST /api/auth/register` creates account with normalized email |
+| **Password Hashing (Bcrypt)** | **PASS** | Verified salt factor 12 hashing; password hash securely stored in MongoDB (`$2b$12$...`) |
+| **MongoDB Compass Persistence** | **PASS** | Verified account persistence in `urban_jungle.users` collection |
+| **Duplicate Email Prevention** | **PASS** | Verified duplicate emails are rejected with `409 Conflict` & clear message |
+| **Authentication & JWT Issuance** | **PASS** | Verified `POST /api/auth/login` verifies bcrypt hash & issues 30-day JWT |
+| **Protected Routes** | **PASS** | Verified `GET /api/auth/me` with JWT header returns `200 OK`; rejects missing tokens with `401` |
+| **Session Persistence** | **PASS** | Verified browser page refresh preserves user session without returning to login |
+| **Backend Startup & Health** | **PASS** | `GET /api/health` returns `status: "UP"`, `database: "connected"` |
+| **MongoDB Connectivity** | **PASS** | Connected to `mongodb://127.0.0.1:27017/urban_jungle` with Atlas fallback |
+| **Vercel Serverless Architecture** | **PASS** | Verified `api/index.js` and `vercel.json` rewrites for production deployment |
+| **Catalog API & Filtering** | **PASS** | Verified search (`snake`), category filters (`Low Light`), and full catalog list |
+| **Order Placement Flow** | **PASS** | Verified `POST /api/orders` persists order and auto-upserts customer |
+| **Excel Workbook Generation** | **PASS** | Verified 5 sheets generated with auto-filters and formatting (`Flexi_Credit_Data.xlsx`) |
+| **Excel Binary Download** | **PASS** | Verified `GET /api/excel/download` streams valid XLSX workbook |
+| **Consultation Bookings** | **PASS** | Verified `POST /api/consultations` with validated service types |
+| **Workshop Registrations** | **PASS** | Verified `POST /api/workshops/register` attendee registration |
+| **Newsletter Subscription** | **PASS** | Verified `POST /api/newsletter/subscribe` email recording |
 
 ---
 
