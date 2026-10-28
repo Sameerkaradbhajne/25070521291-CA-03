@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 const api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json'
     },
-    timeout: 8000
+    timeout: 15000
 });
 
 // Attach JWT token if available
@@ -29,12 +29,12 @@ export interface UserData {
 }
 
 export const loginUserApi = async (credentials: { email: string; password: string }) => {
-    const response = await api.post('/auth/login', credentials, { timeout: 3000 });
+    const response = await api.post('/auth/login', credentials);
     return response.data;
 };
 
 export const registerUserApi = async (credentials: { name: string; email: string; password: string }) => {
-    const response = await api.post('/auth/register', credentials, { timeout: 3000 });
+    const response = await api.post('/auth/register', credentials);
     return response.data;
 };
 

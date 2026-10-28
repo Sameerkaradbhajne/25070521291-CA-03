@@ -56,9 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     /**
-     * Login — attempts real backend API verification against MongoDB first.
-     * When on the live Vercel deployment where the local backend is unreachable,
-     * seamlessly activates the resilient client-side authentication fallback so the live site never fails.
+     * Login — authenticates credentials against real backend API & MongoDB.
      */
     const login = async (
         credentials: { email: string; password: string },
@@ -80,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('Please enter your password.');
             }
 
-            // 1. Attempt Real Backend API (MongoDB)
             try {
                 const response = await loginUserApi({ email: rawEmail, password: rawPassword });
 
@@ -93,61 +90,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     saveSession(userData, authToken, rememberMe);
                     return userData;
                 }
+                throw new Error(response?.message || 'Login failed. Please try again.');
             } catch (apiErr: any) {
-                // If the backend was reachable and returned a 401/400 (wrong password, etc.), respect it!
-                if (apiErr.response && apiErr.response.data && apiErr.response.status !== 502 && apiErr.response.status !== 504) {
-                    throw new Error(apiErr.response.data.message || 'Incorrect email or password. Please try again.');
+                if (apiErr.response?.data?.message) {
+                    throw new Error(apiErr.response.data.message);
                 }
-
-                // If backend was unreachable (e.g. on live Vercel website due to mixed content or offline local server):
-                // Activate client-side resilient authentication fallback
-                console.warn('[AuthContext] Backend API unreachable. Activating resilient Vercel live fallback.');
-
-                // Check client-registered accounts in localStorage
-                let registeredAccounts: Array<{ name: string; email: string; passwordHash: string }> = [];
-                try {
-                    const saved = localStorage.getItem('urban_registered_accounts');
-                    if (saved) registeredAccounts = JSON.parse(saved);
-                } catch {
-                    registeredAccounts = [];
-                }
-
-                const existing = registeredAccounts.find(u => u.email.toLowerCase() === rawEmail);
-                let displayName = 'Botanist';
-                if (existing) {
-                    if (existing.passwordHash !== rawPassword) {
-                        throw new Error('Incorrect email or password. Please try again.');
-                    }
-                    displayName = existing.name;
-                } else {
-                    displayName = rawEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                }
-
-                const fallbackToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoi' + btoa(rawEmail) + '"}';
-                const fallbackUser: UserData = {
-                    _id: 'usr_' + Date.now(),
-                    name: displayName,
-                    email: rawEmail,
-                    role: rawEmail.includes('admin') ? 'admin' : 'customer',
-                    token: fallbackToken
-                };
-
-                setUser(fallbackUser);
-                setToken(fallbackToken);
-                saveSession(fallbackUser, fallbackToken, rememberMe);
-                return fallbackUser;
+                throw new Error(apiErr.message || 'Login failed. Please check your credentials.');
             }
-
-            throw new Error('Login failed. Please try again.');
         } finally {
             setIsLoading(false);
         }
     };
 
     /**
-     * Registration — calls the real MongoDB backend first.
-     * When on the live Vercel website where the backend is unreachable,
-     * stores the account locally so "Create Account" succeeds and transitions to login seamlessly.
+     * Registration — saves user account in real MongoDB database.
      */
     const register = async (
         data: { name: string; email: string; password: string }
@@ -169,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('Password must be at least 8 characters long.');
             }
 
-            // 1. Attempt Real Backend API (MongoDB)
             try {
                 const response = await registerUserApi({
                     name: trimmedName,
@@ -180,38 +135,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (response?.success) {
                     return { message: response.message || 'Account created successfully! Please sign in.' };
                 }
+                throw new Error(response?.message || 'Registration failed.');
             } catch (apiErr: any) {
-                // If backend answered with duplicate account (409) or bad request (400), respect it!
-                if (apiErr.response && apiErr.response.data && apiErr.response.status !== 502 && apiErr.response.status !== 504) {
-                    throw new Error(apiErr.response.data.message || 'Registration failed. Please check your details.');
+                if (apiErr.response?.data?.message) {
+                    throw new Error(apiErr.response.data.message);
                 }
-
-                // If backend was unreachable (live Vercel deployment), save account in client storage
-                console.warn('[AuthContext] Backend API unreachable. Registering account in live Vercel storage.');
-                let registeredAccounts: Array<{ name: string; email: string; passwordHash: string }> = [];
-                try {
-                    const saved = localStorage.getItem('urban_registered_accounts');
-                    if (saved) registeredAccounts = JSON.parse(saved);
-                } catch {
-                    registeredAccounts = [];
-                }
-
-                // Prevent duplicate registrations
-                if (registeredAccounts.some(u => u.email.toLowerCase() === rawEmail)) {
-                    throw new Error('An account with this email address already exists. Please sign in instead.');
-                }
-
-                registeredAccounts.push({
-                    name: trimmedName,
-                    email: rawEmail,
-                    passwordHash: rawPassword
-                });
-                localStorage.setItem('urban_registered_accounts', JSON.stringify(registeredAccounts));
-
-                return { message: 'Account created! Please sign in with your new credentials.' };
+                throw new Error(apiErr.message || 'Registration failed. Please check your connection.');
             }
-
-            return { message: 'Account created! Please sign in with your new credentials.' };
         } finally {
             setIsLoading(false);
         }

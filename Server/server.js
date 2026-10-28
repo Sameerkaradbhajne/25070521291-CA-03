@@ -121,6 +121,16 @@ app.get('/api', (req, res) => {
     });
 });
 
+// Ensure DB connection for incoming API requests (essential for serverless and auto-reconnect)
+app.use(async (req, res, next) => {
+    if (req.path.startsWith('/api') && req.path !== '/api/health') {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
+    }
+    next();
+});
+
 // API Routes
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
@@ -139,12 +149,16 @@ function mongooseStatus() {
 // Error Handler Middleware
 app.use(errorHandler);
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(` Urban Jungle Backend running on port ${PORT}`);
-    console.log(` API Documentation & Base URL: http://localhost:${PORT}/api`);
-    console.log(` Health check: http://localhost:${PORT}/api/health`);
-    console.log(` Excel Reports API: http://localhost:${PORT}/api/excel/download`);
-    console.log(`====================================================`);
-});
+// Start Server locally if not running in serverless / Vercel
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`====================================================`);
+        console.log(` Urban Jungle Backend running on port ${PORT}`);
+        console.log(` API Documentation & Base URL: http://localhost:${PORT}/api`);
+        console.log(` Health check: http://localhost:${PORT}/api/health`);
+        console.log(` Excel Reports API: http://localhost:${PORT}/api/excel/download`);
+        console.log(`====================================================`);
+    });
+}
+
+export default app;
