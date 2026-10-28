@@ -151,12 +151,12 @@ graph TD
 
 ```
 25070521291/
-├── api/
-│   └── index.js                        # Vercel Serverless Function entry point (/api/*)
 ├── Client/                             # React + TypeScript Frontend
 │   ├── public/
-│   │   ├── images/                     # Botanical photography & screenshots
+│   │   ├── images/                     # Botanical photography & illustrations
+│   │   ├── screenshots/                # System screenshots
 │   │   └── vite.svg
+│   ├── screenshots/                    # Terminal & Compass GUI verification screenshots
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Navbar.tsx              # Navigation bar with Cart, Orders & Login links
@@ -184,6 +184,8 @@ graph TD
 │   ├── vercel.json                     # SPA client-side routing fallback configuration
 │   └── vite.config.ts                  # Vite build configuration with /api local proxy
 ├── Server/                             # Node.js + Express Backend
+│   ├── api/
+│   │   └── index.js                    # Serverless API function handler
 │   ├── config/
 │   │   └── db.js                       # Mongoose connection with caching & Atlas fallback
 │   ├── controllers/
@@ -222,8 +224,6 @@ graph TD
 │   ├── package.json                    # Server dependencies & scripts
 │   └── server.js                       # Express application & serverless export
 ├── Flexi_Credit_Data.xlsx              # Root synchronized Excel workbook copy
-├── package.json                        # Monorepo build and serverless dependency manifest
-├── vercel.json                         # Vercel deployment & serverless rewrite configuration
 ├── .gitignore                          # Excludes node_modules, credentials & caches
 └── README.md                           # Project documentation & evaluation guide
 ```
@@ -302,7 +302,7 @@ npm run dev
 - **Health Check Endpoint:** `http://localhost:5000/api/health`
 - **Excel Report Download:** `http://localhost:5000/api/excel/download`
 
-![Express Backend Server running with nodemon on port 5000 with MongoDB connected](screenshots/backend-terminal.png)
+![Express Backend Server running with nodemon on port 5000 with MongoDB connected](Client/screenshots/backend-terminal.png)
 
 ---
 
@@ -316,7 +316,7 @@ npm run dev
 
 - **Frontend Application URL:** `http://localhost:5173`
 
-![Vite Frontend Development Server running on port 5173](screenshots/frontend-terminal.png)
+![Vite Frontend Development Server running on port 5173](Client/screenshots/frontend-terminal.png)
 
 ---
 
@@ -342,7 +342,7 @@ Navigate to **[http://localhost:5173](http://localhost:5173)** to access the Urb
 3. Click **Connect**.
 4. Select the **`urban_jungle`** database from the list to view all collections.
 
-![MongoDB Compass GUI connected to urban_jungle database showing all collections](screenshots/mongodb-compass.png)
+![MongoDB Compass GUI connected to urban_jungle database showing all collections](Client/screenshots/mongodb-compass.png)
 
 ### Database Collections in `urban_jungle`:
 | Collection | Description | Primary Fields |
